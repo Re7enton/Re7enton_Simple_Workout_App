@@ -11,6 +11,7 @@ composeBom = "2025.05.00"
 hilt = "2.56.2"
 ksp = "2.1.10-1.0.31"
 room = "2.7.1"
+timber = "5.0.1"
 
 
 [libraries]
@@ -34,6 +35,8 @@ room-compiler = { module = "androidx.room:room-compiler", version.ref = "room" }
 hilt-android = { module = "com.google.dagger:hilt-android", version.ref = "hilt" }
 hilt-compiler = { module = "com.google.dagger:hilt-compiler", version.ref = "hilt" }
 ksp-api = { module = "com.google.devtools.ksp:symbol-processing-api", version.ref = "ksp" }
+timber = { module = "com.jakewharton.timber:timber", version.ref = "timber" }
+
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
