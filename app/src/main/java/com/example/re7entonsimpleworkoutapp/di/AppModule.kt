@@ -2,6 +2,9 @@ package com.example.re7entonsimpleworkoutapp.di
 
 import android.content.Context
 import androidx.room.Room
+import com.example.re7entonsimpleworkoutapp.data.dao.WorkoutDao
+import com.example.re7entonsimpleworkoutapp.data.db.AppDatabase
+import com.example.re7entonsimpleworkoutapp.data.repository.WorkoutRepository
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -18,7 +21,7 @@ object AppModule {
     @Singleton
     fun provideDatabase(@ApplicationContext ctx: Context): AppDatabase =
         Room.databaseBuilder(ctx, AppDatabase::class.java, "workouts.db")
-            .fallbackToDestructiveMigration()  // wipe & rebuild if schema changes
+            .fallbackToDestructiveMigration(dropAllTables = true)  // wipe & rebuild if schema changes
             .build()
 
     // Provide the DAO from the database
