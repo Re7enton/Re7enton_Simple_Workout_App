@@ -59,6 +59,7 @@ dependencies {
     ksp(libs.hilt.compiler)
     implementation(libs.ksp.api)
     implementation(libs.timber)
+    implementation(libs.hilt.navigation.compose)
 
 
     testImplementation(libs.junit)
