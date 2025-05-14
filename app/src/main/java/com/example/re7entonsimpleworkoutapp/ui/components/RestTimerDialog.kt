@@ -10,7 +10,9 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.window.DialogProperties
+import timber.log.Timber
 
 /**
  * Dialog to configure rest times.
@@ -24,26 +26,27 @@ fun RestTimerDialog(
     onSave: (setSecs: Int, workoutSecs: Int) -> Unit,
     onDismiss: () -> Unit
 ) {
-    // Local string states (we’ll parse to Int)
+    // Local text state for the two inputs
     var setTime by remember { mutableStateOf(defaultSet.toString()) }
     var workoutTime by remember { mutableStateOf(defaultWorkout.toString()) }
 
     AlertDialog(
-        onDismissRequest = onDismiss,
+        onDismissRequest = {
+            Timber.d("RestTimerDialog dismissed by outside tap")
+            onDismiss()
+        },
         title = { Text("Rest Timer Settings") },
         text = {
             Column {
-                // Between-sets input
                 OutlinedTextField(
                     value = setTime,
                     onValueChange = { new ->
-                        // only allow digits
+                        // Only digits allowed
                         setTime = new.filter { it.isDigit() }
                     },
                     label = { Text("Between Sets (s)") },
                     singleLine = true
                 )
-                // Between-workouts input
                 OutlinedTextField(
                     value = workoutTime,
                     onValueChange = { new ->
@@ -56,19 +59,33 @@ fun RestTimerDialog(
         },
         confirmButton = {
             TextButton(onClick = {
-                // parse or fallback to defaults
                 val s = setTime.toIntOrNull() ?: defaultSet
                 val w = workoutTime.toIntOrNull() ?: defaultWorkout
+                Timber.d("RestTimerDialog saving: $s s / $w s")
                 onSave(s, w)
             }) {
                 Text("Save")
             }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) {
+            TextButton(onClick = {
+                Timber.d("RestTimerDialog Cancel clicked")
+                onDismiss()
+            }) {
                 Text("Cancel")
             }
         },
         properties = DialogProperties()
+    )
+}
+
+@Preview(showBackground = true)
+@Composable
+fun RestTimerDialogPreview() {
+    RestTimerDialog(
+        defaultSet = 60,
+        defaultWorkout = 120,
+        onSave = { _, _ -> },
+        onDismiss = {}
     )
 }
