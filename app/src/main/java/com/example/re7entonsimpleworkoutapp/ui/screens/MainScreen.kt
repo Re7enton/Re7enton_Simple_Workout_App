@@ -38,7 +38,10 @@ import androidx.hilt.navigation.compose.hiltViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MainScreen(vm: WorkoutViewModel = hiltViewModel()) {
+fun MainScreen(
+    modifier: Modifier = Modifier,
+    vm: WorkoutViewModel = hiltViewModel()
+) {
     // 1) Collect all StateFlows as Compose State
     val workouts by vm.workouts.collectAsState()
     val selectedWorkout by vm.selectedWorkout.collectAsState()
