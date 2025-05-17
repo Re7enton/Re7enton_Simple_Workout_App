@@ -10,48 +10,53 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.window.DialogProperties
 import com.example.re7entonsimpleworkoutapp.R
+import timber.log.Timber
 
 /**
- * A reusable dialog with a single TextField.
- * - [label]: dialog title and text hint.
- * - [onAdd]: called with the entered text on “OK”.
- * - [onDismiss]: called when user cancels.
+ * Dialog for adding or editing a workout name.
+ * If [initial] is non-null, this is “edit” mode.
  */
 @Composable
-fun AddWorkoutDialog(
-    label: String = stringResource(R.string.enter_text),              // default title
-    onAdd: (String) -> Unit,                   // callback for OK
-    onDismiss: () -> Unit                      // callback for Cancel
+fun WorkoutDialog(
+    title: String,
+    initial: String? = null,           // null = add, non-null = edit
+    onConfirm: (String) -> Unit,
+    onDismiss: () -> Unit
 ) {
-    var text by remember { mutableStateOf("") } // local state for TextField
+    var text by remember { mutableStateOf(initial ?: "") }
 
     AlertDialog(
-        onDismissRequest = onDismiss,          // outside tap = dismiss
-        title = { Text(text = label) },        // show the label
+        onDismissRequest = onDismiss,
+        title = { Text(title) },
         text = {
             TextField(
                 value = text,
-                onValueChange = { text = it }, // update local state
-                placeholder = { Text(label) }, // hint text
+                onValueChange = { text = it },
+                placeholder = { Text("Workout name") },
                 singleLine = true
             )
         },
         confirmButton = {
-            TextButton(
-                onClick = {
-                    onAdd(text)               // pass input back
+            TextButton(onClick = {
+                if (text.isBlank()) {
+                    Timber.w("Empty workout name")
+                } else {
+                    onConfirm(text.trim())
                 }
-            ) {
-                Text(stringResource(R.string.ok))
-            }
+            }) { Text("OK") }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text(stringResource(R.string.cancel))
-            }
+            TextButton(onClick = onDismiss) { Text("Cancel") }
         },
-        properties = DialogProperties()       // allow default behavior
+        properties = DialogProperties()
     )
+}
+
+@Preview(showBackground = true)
+@Composable
+fun WorkoutDialogPreview() {
+    WorkoutDialog("Add Workout", onConfirm = {}, onDismiss = {})
 }
