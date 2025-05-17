@@ -2,77 +2,111 @@ package com.example.re7entonsimpleworkoutapp.ui.screens
 
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AccessTime
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Timer
 import androidx.compose.material3.Button
-import androidx.compose.material3.Card
 import androidx.compose.material3.CenterAlignedTopAppBar
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconToggleButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.example.re7entonsimpleworkoutapp.ui.components.AddWorkoutDialog
-import com.example.re7entonsimpleworkoutapp.ui.components.RestTimerDialog
-import com.example.re7entonsimpleworkoutapp.ui.theme.Re7entonSimpleWorkoutAppTheme
-import com.example.re7entonsimpleworkoutapp.viewmodel.WorkoutViewModel
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.example.re7entonsimpleworkoutapp.data.model.WorkoutSet
 import com.example.re7entonsimpleworkoutapp.ui.components.RestCountdownDialog
+import com.example.re7entonsimpleworkoutapp.ui.components.RestTimerDialog
+import com.example.re7entonsimpleworkoutapp.ui.components.SetDialog
+import com.example.re7entonsimpleworkoutapp.ui.components.WorkoutDialog
+import com.example.re7entonsimpleworkoutapp.viewmodel.WorkoutViewModel
 import timber.log.Timber
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MainScreen(
-    modifier: Modifier = Modifier,
-    vm: WorkoutViewModel = hiltViewModel()
-) {
-    // 1) Collect StateFlows from ViewModel
+fun MainScreen(vm: WorkoutViewModel = hiltViewModel()) {
+    // 1) State from ViewModel
     val workouts by vm.workouts.collectAsState()
-    val selectedWorkout by vm.selectedWorkout.collectAsState()
+    val selected by vm.selectedWorkout.collectAsState()
     val sets by vm.sets.collectAsState()
     val restSets by vm.restBetweenSets.collectAsState()
     val restWorkouts by vm.restBetweenWorkouts.collectAsState()
+    val useWorkoutTimer by vm.useWorkoutTimer.collectAsState()
 
-    // 2) Local UI state: which dialogs to show
-    var showAddWorkout by remember { mutableStateOf(false) }
-    var showAddSet by remember { mutableStateOf(false) }
+    // 2) UI state
+    var dropdownExpanded by remember { mutableStateOf(false) }
+    var workoutDialog by remember { mutableStateOf<Pair<Boolean, String?>>(false to null) }
+    var setDialog by remember { mutableStateOf<Pair<Boolean, WorkoutSet?>>(false to null) }
     var showTimerSettings by remember { mutableStateOf(false) }
-    var showTimerCountdown by remember { mutableStateOf(false) }
-    // Which timer duration to use for countdown
-    var countdownSeconds by remember { mutableStateOf(0) }
+    var showCountdown by remember { mutableStateOf(false) }
 
     Scaffold(
-        modifier = modifier,
         topBar = {
-            CenterAlignedTopAppBar(title = { Text("Simple Workout Tracker") })
+            CenterAlignedTopAppBar(
+                title = {
+                    ExposedDropdownMenuBox(
+                        expanded = dropdownExpanded,
+                        onExpandedChange = { dropdownExpanded = !dropdownExpanded }
+                    ) {
+                        Text(
+                            text = selected?.name ?: "Select Workout",
+                            modifier = Modifier
+                                .clickable { dropdownExpanded = true }
+                                .padding(8.dp)
+                        )
+                        ExposedDropdownMenu(
+                            expanded = dropdownExpanded,
+                            onDismissRequest = { dropdownExpanded = false }
+                        ) {
+                            workouts.forEach { w ->
+                                DropdownMenuItem(
+                                    text = { Text(w.name) },
+                                    onClick = {
+                                        vm.selectWorkout(w)
+                                        dropdownExpanded = false
+                                        Timber.d("Selected workout: ${w.name}")
+                                    },
+                                    trailingIcon = {
+                                        IconButton(onClick = {
+                                            workoutDialog = true to w.name
+                                        }) { Icon(Icons.Default.Edit, null) }
+                                        IconButton(onClick = { vm.deleteWorkout(w) }) {
+                                            Icon(Icons.Default.Delete, null)
+                                        }
+                                    }
+                                )
+                            }
+                        }
+                    }
+                },
+                actions = {
+                    IconButton(onClick = { workoutDialog = true to null }) {
+                        Icon(Icons.Default.Add, null)
+                    }
+                }
+            )
         },
         floatingActionButton = {
-            FloatingActionButton(onClick = {
-                Timber.d("FAB clicked: showAddWorkout")
-                showAddWorkout = true
-            }) {
-                Icon(Icons.Default.Add, contentDescription = "Add Workout")
+            // No 'enabled' param on M3 FAB
+            FloatingActionButton(onClick = { /* no-op */ }) {
+                Icon(Icons.Default.Add, null)
             }
         }
     ) { padding ->
@@ -81,156 +115,119 @@ fun MainScreen(
                 .padding(padding)
                 .fillMaxSize()
         ) {
-            // --- Workouts Row ---
-            LazyRow(modifier = Modifier.padding(8.dp)) {
-                items(workouts) { workout ->
-                    // Highlight card if it's selected
-                    val isSelected = workout.id == selectedWorkout?.id
-                    Card(
-                        modifier = Modifier
-                            .padding(4.dp)
-                            .clip(MaterialTheme.shapes.medium)
-                            .border(
-                                width = if (isSelected) 2.dp else 1.dp,
-                                color = if (isSelected)
-                                    MaterialTheme.colorScheme.primary
-                                else Color.Gray,
-                                shape = MaterialTheme.shapes.medium
-                            )
-                            .clickable {
-                                Timber.d("Selected workout: ${workout.name}")
-                                vm.selectWorkout(workout)
-                            }
-                    ) {
-                        Text(
-                            text = workout.name,
-                            style = MaterialTheme.typography.bodyLarge,
-                            modifier = Modifier.padding(16.dp)
-                        )
-                    }
-                }
-            }
-
-            // --- Info Text ---
-            Text(
-                text = "Selected: ${selectedWorkout?.name ?: "None"}",
-                style = MaterialTheme.typography.titleMedium,
-                modifier = Modifier.padding(horizontal = 8.dp)
-            )
-            Text(
-                text = "Rest settings: $restSets s between sets, $restWorkouts s between workouts",
-                style = MaterialTheme.typography.bodyMedium,
-                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
-            )
-
-            // --- Sets List ---
-            LazyColumn(
-                modifier = Modifier
-                    .weight(1f)
-                    .padding(8.dp)
+            // Rest toggle
+            Row(
+                Modifier
+                    .fillMaxWidth()
+                    .padding(8.dp),
+                horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                items(sets) { set ->
-                    Text(
-                        text = "Weight: ${set.weightKg} kg",
-                        style = MaterialTheme.typography.bodyLarge,
-                        modifier = Modifier.padding(vertical = 4.dp)
+                Text("Rest: ${if (useWorkoutTimer) restWorkouts else restSets}s")
+                IconToggleButton(
+                    checked = useWorkoutTimer,
+                    onCheckedChange = { vm.toggleTimerChoice(it) }
+                ) {
+                    Icon(
+                        imageVector = if (useWorkoutTimer) Icons.Default.Timer else Icons.Default.AccessTime,
+                        contentDescription = null
                     )
                 }
             }
 
-            // --- Buttons Row ---
-            Row(modifier = Modifier.padding(8.dp)) {
-                Button(
-                    onClick = {
-                        Timber.d("Add Set button clicked")
-                        showAddSet = true
-                    },
-                    enabled = selectedWorkout != null
-                ) {
-                    Text("Add Set")
+            // Sets list
+            LazyColumn(
+                Modifier
+                    .weight(1f)
+                    .padding(8.dp)
+            ) {
+                items(sets) { s ->
+                    Row(
+                        Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 4.dp)
+                            .border(1.dp, Color.Gray, MaterialTheme.shapes.small),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text("Weight: ${s.weightKg} kg", Modifier.padding(8.dp))
+                        Row {
+                            IconButton(onClick = { setDialog = true to s }) {
+                                Icon(Icons.Default.Edit, null)
+                            }
+                            IconButton(onClick = { vm.deleteSet(s) }) {
+                                Icon(Icons.Default.Delete, null)
+                            }
+                        }
+                    }
                 }
-                Spacer(modifier = Modifier.width(16.dp))
-                Button(onClick = {
-                    Timber.d("Rest Timer settings clicked")
-                    showTimerSettings = true
-                }) {
-                    Text("Timer Settings")
+            }
+
+            // Bottom buttons
+            Row(
+                Modifier
+                    .fillMaxWidth()
+                    .padding(8.dp),
+                horizontalArrangement = Arrangement.SpaceAround
+            ) {
+                Button(onClick = { setDialog = true to null }, enabled = selected != null) {
+                    Icon(Icons.Default.Add, null); Spacer(Modifier.width(4.dp)); Text("Add Set")
                 }
-                Spacer(modifier = Modifier.width(8.dp))
-                Button(
-                    onClick = {
-                        // Start a countdown for set rest
-                        countdownSeconds = restSets
-                        showTimerCountdown = true
-                        Timber.d("Started rest countdown for $countdownSeconds seconds")
-                    },
-                    enabled = true
-                ) {
-                    Text("Start Rest")
+                Button(onClick = { showTimerSettings = true }) {
+                    Icon(Icons.Default.Settings, null); Spacer(Modifier.width(4.dp)); Text("Settings")
+                }
+                Button(onClick = { showCountdown = true }) {
+                    Icon(Icons.Default.PlayArrow, null); Spacer(Modifier.width(4.dp)); Text("Start")
                 }
             }
         }
 
-        // --- DIALOGS ---
-        if (showAddWorkout) {
-            AddWorkoutDialog(
-                label = "New Workout Name",
-                onAdd = { name ->
-                    if (name.isBlank()) {
-                        Timber.w("Tried to add blank workout")
-                    } else {
-                        vm.addWorkout(name)
-                    }
-                    showAddWorkout = false
+        // Workout dialog
+        if (workoutDialog.first) {
+            WorkoutDialog(
+                title = if (workoutDialog.second == null) "Add Workout" else "Edit Workout",
+                initial = workoutDialog.second,
+                onConfirm = { name ->
+                    if (workoutDialog.second == null) vm.addWorkout(name)
+                    else vm.editWorkout(vm.selectedWorkout.value!!.copy(name = name))
+                    workoutDialog = false to null
                 },
-                onDismiss = { showAddWorkout = false }
+                onDismiss = { workoutDialog = false to null }
             )
         }
 
-        if (showAddSet) {
-            AddWorkoutDialog(
-                label = "Enter Weight (kg)",
-                onAdd = { input ->
-                    val w = input.toFloatOrNull()
-                    if (w == null) {
-                        Timber.w("Invalid weight input: '$input'")
-                    } else {
-                        vm.addSet(w)
-                    }
-                    showAddSet = false
+        // Set dialog
+        if (setDialog.first) {
+            SetDialog(
+                title = if (setDialog.second == null) "Add Set" else "Edit Set",
+                initial = setDialog.second?.weightKg,
+                onConfirm = { wt ->
+                    if (setDialog.second == null) vm.addSet(wt)
+                    else vm.editSet(setDialog.second!!.copy(weightKg = wt))
+                    setDialog = false to null
                 },
-                onDismiss = { showAddSet = false }
+                onDismiss = { setDialog = false to null }
             )
         }
 
+        // Timer settings
         if (showTimerSettings) {
             RestTimerDialog(
                 defaultSet = restSets,
                 defaultWorkout = restWorkouts,
-                onSave = { setsSec, workSec ->
-                    vm.updateRestBetweenSets(setsSec)
-                    vm.updateRestBetweenWorkouts(workSec)
-                    Timber.i("Rest settings updated: $setsSec / $workSec")
+                onSave = { s, w ->
+                    vm.updateRestBetweenSets(s)
+                    vm.updateRestBetweenWorkouts(w)
                     showTimerSettings = false
                 },
-                onDismiss = {
-                    Timber.d("Timer settings dismissed")
-                    showTimerSettings = false
-                }
+                onDismiss = { showTimerSettings = false }
             )
         }
 
-        if (showTimerCountdown) {
+        // Countdown
+        if (showCountdown) {
             RestCountdownDialog(
-                seconds = countdownSeconds,
-                onFinish = {
-                    Timber.i("Rest countdown finished")
-                    showTimerCountdown = false
-                },
-                onCancel = {
-                    Timber.d("Rest countdown cancelled")
-                    showTimerCountdown = false
-                }
+                seconds = if (useWorkoutTimer) restWorkouts else restSets,
+                onFinish = { showCountdown = false },
+                onCancel = { showCountdown = false }
             )
         }
     }
@@ -239,5 +236,5 @@ fun MainScreen(
 @Preview(showBackground = true)
 @Composable
 fun MainScreenPreview() {
-    MainScreen(modifier = Modifier.fillMaxSize())
+    MainScreen()
 }

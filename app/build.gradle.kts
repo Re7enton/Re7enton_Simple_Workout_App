@@ -60,6 +60,7 @@ dependencies {
     implementation(libs.ksp.api)
     implementation(libs.timber)
     implementation(libs.hilt.navigation.compose)
+    implementation(libs.material.icons.extended)
 
 
     testImplementation(libs.junit)
