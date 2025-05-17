@@ -60,7 +60,17 @@ class WorkoutViewModel @Inject constructor(
     private val _restBetweenWorkouts = MutableStateFlow(120)
     val restBetweenWorkouts: StateFlow<Int> = _restBetweenWorkouts.asStateFlow()
 
-    /** Call when user taps on a workout card to view/add sets. */
+    // 5) Which timer to use: false = between-sets, true = between-workouts
+    private val _useWorkoutTimer = MutableStateFlow(false)
+    val useWorkoutTimer: StateFlow<Boolean> = _useWorkoutTimer.asStateFlow()
+
+    /** Toggle between using the “sets” timer vs. the “workouts” timer. */
+    fun toggleTimerChoice(useWorkout: Boolean) {
+        _useWorkoutTimer.value = useWorkout
+        Timber.d("Timer choice: ${if (useWorkout) "Workout" else "Set"}")
+    }
+
+    /** Select a workout to view/add/edit/delete its sets. */
     fun selectWorkout(workout: Workout) {
         _selectedWorkout.value = workout
     }
@@ -74,11 +84,19 @@ class WorkoutViewModel @Inject constructor(
         }
     }
 
-    /** Remove an existing workout (and its sets). */
-    fun removeWorkout(workout: Workout) = viewModelScope.launch {
+    /** Edit an existing workout’s name. */
+    fun editWorkout(workout: Workout) = viewModelScope.launch {
+        try {
+            repo.updateWorkout(workout)
+        } catch (e: Exception) {
+            Timber.e(e, "Error editing workout")
+        }
+    }
+
+    /** Delete a workout (and its sets). Clears selection if it was the one. */
+    fun deleteWorkout(workout: Workout) = viewModelScope.launch {
         try {
             repo.removeWorkout(workout)
-            // If the removed workout was selected, clear selection
             if (_selectedWorkout.value?.id == workout.id) {
                 _selectedWorkout.value = null
             }
@@ -101,8 +119,17 @@ class WorkoutViewModel @Inject constructor(
         }
     }
 
-    /** Remove a previously added set. */
-    fun removeSet(set: WorkoutSet) = viewModelScope.launch {
+    /** Edit an existing set’s weight. */
+    fun editSet(set: WorkoutSet) = viewModelScope.launch {
+        try {
+            repo.updateSet(set)
+        } catch (e: Exception) {
+            Timber.e(e, "Error editing set")
+        }
+    }
+
+    /** Delete a specific set entry. */
+    fun deleteSet(set: WorkoutSet) = viewModelScope.launch {
         try {
             repo.removeSet(set)
         } catch (e: Exception) {
@@ -110,12 +137,12 @@ class WorkoutViewModel @Inject constructor(
         }
     }
 
-    /** Update the rest-between-sets timer. */
+    /** Update the rest-between-sets timer duration. */
     fun updateRestBetweenSets(seconds: Int) {
         _restBetweenSets.value = seconds
     }
 
-    /** Update the rest-between-workouts timer. */
+    /** Update the rest-between-workouts timer duration. */
     fun updateRestBetweenWorkouts(seconds: Int) {
         _restBetweenWorkouts.value = seconds
     }
