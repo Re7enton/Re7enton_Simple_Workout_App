@@ -14,73 +14,112 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import timber.log.Timber
 import javax.inject.Inject
 
+// Opt‑in so we can use flatMapLatest without warnings
+@OptIn(ExperimentalCoroutinesApi::class)
 @HiltViewModel
 class WorkoutViewModel @Inject constructor(
     private val repo: WorkoutRepository
 ) : ViewModel() {
 
-    // 1) Expose all workouts as a StateFlow with an initial empty list
-    private val _workouts = repo.getWorkouts()
-        .stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5_000),
-            initialValue = emptyList()
-        )
+    // 1) Stream of all workouts from the database
+    private val _workouts: StateFlow<List<Workout>> =
+        repo.getWorkouts()
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
     val workouts: StateFlow<List<Workout>> = _workouts
 
-    // 2) Track which workout is selected; starts as null (no selection)
-    private val _selectedWorkout = MutableStateFlow<Workout?>(null)
-    val selectedWorkout: StateFlow<Workout?> = _selectedWorkout.asStateFlow()
+    // 2) Currently selected workout (or null)
+    private val _selected = MutableStateFlow<Workout?>(null)
+    val selectedWorkout: StateFlow<Workout?> = _selected.asStateFlow()
 
-    // 3) Whenever selectedWorkout changes, switch to its sets or empty list
-    @OptIn(ExperimentalCoroutinesApi::class)
-    private val _sets = _selectedWorkout
-        .flatMapLatest { workout ->
-            if (workout != null) {
-                repo.getSets(workout.id)
-            } else {
-                flowOf(emptyList())
+    // 3) Stream of sets for the selected workout
+    private val _sets: StateFlow<List<WorkoutSet>> =
+        _selected
+            .flatMapLatest { workout ->
+                if (workout != null) repo.getSets(workout.id)
+                else flowOf(emptyList())
             }
-        }
-        .stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5_000),
-            initialValue = emptyList()
-        )
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
     val sets: StateFlow<List<WorkoutSet>> = _sets
 
-    // 4) Rest timers as StateFlows so UI can collect & display them
-    private val _restBetweenSets = MutableStateFlow(60)
-    val restBetweenSets: StateFlow<Int> = _restBetweenSets.asStateFlow()
+    // 4) Rest timers
+    private val _restSets = MutableStateFlow(60)
+    val restBetweenSets: StateFlow<Int> = _restSets.asStateFlow()
 
-    private val _restBetweenWorkouts = MutableStateFlow(120)
-    val restBetweenWorkouts: StateFlow<Int> = _restBetweenWorkouts.asStateFlow()
+    private val _restWorkouts = MutableStateFlow(120)
+    val restBetweenWorkouts: StateFlow<Int> = _restWorkouts.asStateFlow()
 
-    // 5) Which timer to use: false = between-sets, true = between-workouts
+    // 5) Which timer to use: false = sets, true = workouts
     private val _useWorkoutTimer = MutableStateFlow(false)
     val useWorkoutTimer: StateFlow<Boolean> = _useWorkoutTimer.asStateFlow()
 
-    /** Toggle between using the “sets” timer vs. the “workouts” timer. */
+    /** Toggle which timer the countdown uses. */
     fun toggleTimerChoice(useWorkout: Boolean) {
         _useWorkoutTimer.value = useWorkout
-        Timber.d("Timer choice: ${if (useWorkout) "Workout" else "Set"}")
+        Timber.d("Timer choice set to: ${if (useWorkout) "Workout" else "Set"}")
     }
 
-    /** Select a workout to view/add/edit/delete its sets. */
+    /** User tapped a workout → select it. */
     fun selectWorkout(workout: Workout) {
-        _selectedWorkout.value = workout
+        _selected.value = workout
     }
 
-    /** Add a new workout with [name]. */
+    /**
+     * Add a new workout to the database, then auto‑select it.
+     * Uses Flow.first() to get the latest list and find the inserted item.
+     */
     fun addWorkout(name: String) = viewModelScope.launch {
         try {
-            repo.addWorkout(name)
+            // Insert and get new row ID
+            val newId = repo.addWorkout(name)
+
+            // Fetch current workouts list once
+            val currentList = repo.getWorkouts().first()
+            // Find the newly inserted workout by ID
+            val newWorkout = currentList.firstOrNull { it.id == newId }
+
+            if (newWorkout != null) {
+                _selected.value = newWorkout
+                Timber.d("Added & auto‑selected workout '${newWorkout.name}' (id=$newId)")
+            } else {
+                Timber.w("Workout added but not found in list: id=$newId")
+            }
         } catch (e: Exception) {
             Timber.e(e, "Error adding workout")
+        }
+    }
+
+    /**
+     * Remove a workout and clear selection if it was the one removed.
+     */
+    fun deleteWorkout(workout: Workout) = viewModelScope.launch {
+        try {
+            repo.removeWorkout(workout)
+            if (_selected.value?.id == workout.id) {
+                _selected.value = null
+                Timber.d("Deleted selected workout '${workout.name}' and cleared selection")
+            }
+        } catch (e: Exception) {
+            Timber.e(e, "Error deleting workout")
+        }
+    }
+
+    /** Add a set to the currently selected workout. */
+    fun addSet(weight: Float) = viewModelScope.launch {
+        val w = _selected.value
+        if (w == null) {
+            Timber.w("Cannot add set: no workout selected")
+            return@launch
+        }
+        try {
+            repo.addSet(w.id, weight)
+            Timber.d("Added set of $weight kg to workout '${w.name}'")
+        } catch (e: Exception) {
+            Timber.e(e, "Error adding set")
         }
     }
 
@@ -88,34 +127,9 @@ class WorkoutViewModel @Inject constructor(
     fun editWorkout(workout: Workout) = viewModelScope.launch {
         try {
             repo.updateWorkout(workout)
+            Timber.d("Updated workout '${workout.name}' (id=${workout.id})")
         } catch (e: Exception) {
             Timber.e(e, "Error editing workout")
-        }
-    }
-
-    /** Delete a workout (and its sets). Clears selection if it was the one. */
-    fun deleteWorkout(workout: Workout) = viewModelScope.launch {
-        try {
-            repo.removeWorkout(workout)
-            if (_selectedWorkout.value?.id == workout.id) {
-                _selectedWorkout.value = null
-            }
-        } catch (e: Exception) {
-            Timber.e(e, "Error removing workout")
-        }
-    }
-
-    /** Add a set with [weight] kg to the currently selected workout. */
-    fun addSet(weight: Float) = viewModelScope.launch {
-        val workout = _selectedWorkout.value
-        if (workout == null) {
-            Timber.w("Tried to add set but no workout is selected")
-            return@launch
-        }
-        try {
-            repo.addSet(workout.id, weight)
-        } catch (e: Exception) {
-            Timber.e(e, "Error adding set")
         }
     }
 
@@ -123,27 +137,29 @@ class WorkoutViewModel @Inject constructor(
     fun editSet(set: WorkoutSet) = viewModelScope.launch {
         try {
             repo.updateSet(set)
+            Timber.d("Updated set id=${set.id} to ${set.weightKg} kg")
         } catch (e: Exception) {
             Timber.e(e, "Error editing set")
         }
     }
 
-    /** Delete a specific set entry. */
+    /** Delete a set entry. */
     fun deleteSet(set: WorkoutSet) = viewModelScope.launch {
         try {
             repo.removeSet(set)
+            Timber.d("Deleted set id=${set.id}")
         } catch (e: Exception) {
-            Timber.e(e, "Error removing set")
+            Timber.e(e, "Error deleting set")
         }
     }
 
-    /** Update the rest-between-sets timer duration. */
+    /** Update the “between‑sets” timer. */
     fun updateRestBetweenSets(seconds: Int) {
-        _restBetweenSets.value = seconds
+        _restSets.value = seconds
     }
 
-    /** Update the rest-between-workouts timer duration. */
+    /** Update the “between‑workouts” timer. */
     fun updateRestBetweenWorkouts(seconds: Int) {
-        _restBetweenWorkouts.value = seconds
+        _restWorkouts.value = seconds
     }
 }
