@@ -13,6 +13,11 @@ ksp = "2.1.20-2.0.1"
 room = "2.7.1"
 timber = "5.0.1"
 hilt-navigation = "1.2.0"
+playServicesWearable = "19.0.0"
+composeMaterial = "1.2.1"
+composeFoundation = "1.2.1"
+wearToolingPreview = "1.0.0"
+coreSplashscreen = "1.0.1"
 
 
 [libraries]
@@ -39,6 +44,11 @@ ksp-api = { module = "com.google.devtools.ksp:symbol-processing-api", version.re
 timber = { module = "com.jakewharton.timber:timber", version.ref = "timber" }
 hilt-navigation-compose = { module = "androidx.hilt:hilt-navigation-compose", version.ref = "hilt-navigation" }
 material-icons-extended = { group = "androidx.compose.material", name = "material-icons-extended" }
+play-services-wearable = { group = "com.google.android.gms", name = "play-services-wearable", version.ref = "playServicesWearable" }
+androidx-compose-material = { group = "androidx.wear.compose", name = "compose-material", version.ref = "composeMaterial" }
+androidx-compose-foundation = { group = "androidx.wear.compose", name = "compose-foundation", version.ref = "composeFoundation" }
+androidx-wear-tooling-preview = { group = "androidx.wear", name = "wear-tooling-preview", version.ref = "wearToolingPreview" }
+androidx-core-splashscreen = { group = "androidx.core", name = "core-splashscreen", version.ref = "coreSplashscreen" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

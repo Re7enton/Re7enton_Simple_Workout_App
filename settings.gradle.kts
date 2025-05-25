@@ -21,4 +21,4 @@ dependencyResolutionManagement {
 
 rootProject.name = "Re7enton Simple Workout App"
 include(":app")
- 
+include(":wear")
