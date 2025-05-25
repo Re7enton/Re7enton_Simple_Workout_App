@@ -7,5 +7,5 @@
     <string name="add_set">Add Set</string>
     <string name="you_have_drunk">You have drunk %1$d glasses</string>
     <string name="select_workout">Select Workout</string>
-    <string name="hello_world">From the Square world,\nHello, %1$s!</string>
+    <string name="drink_reminder_text">Time to drink water!</string>
 </resources>

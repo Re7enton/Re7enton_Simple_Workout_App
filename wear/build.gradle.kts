@@ -36,6 +36,8 @@ android {
         jvmTarget = "11"
     }
     buildFeatures {
+        // Turn on BuildConfig generation (off by default in AGP 8+)
+        buildConfig = true
         compose = true
     }
 }

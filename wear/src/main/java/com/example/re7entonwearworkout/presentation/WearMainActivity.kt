@@ -22,51 +22,27 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.wear.compose.material.MaterialTheme
 import androidx.wear.compose.material.Text
 import androidx.wear.compose.material.TimeText
-import androidx.wear.tooling.preview.devices.WearDevices
+//import androidx.wear.tooling.preview.devices.WearDevices
 import com.example.re7entonwearworkout.R
 import com.example.re7entonwearworkout.presentation.theme.Re7entonSimpleWorkoutAppTheme
+import dagger.hilt.android.AndroidEntryPoint
 
+@AndroidEntryPoint
 class WearMainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
-        installSplashScreen()
-
         super.onCreate(savedInstanceState)
-
-        setTheme(android.R.style.Theme_DeviceDefault)
-
         setContent {
-            WearApp("Android")
+//            Re7entonWearOsWorkoutTheme {
+//                val navController = rememberNavController()
+//                NavHost(navController, startDestination = "timer") {
+//                    composable("timer") {
+//                        TimerScreen()
+//                    }
+//                    composable("hydration") {
+//                        HydrationScreen()
+//                    }
+//                }
+//            }
         }
     }
-}
-
-@Composable
-fun WearApp(greetingName: String) {
-    Re7entonSimpleWorkoutAppTheme {
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(MaterialTheme.colors.background),
-            contentAlignment = Alignment.Center
-        ) {
-            TimeText()
-            Greeting(greetingName = greetingName)
-        }
-    }
-}
-
-@Composable
-fun Greeting(greetingName: String) {
-    Text(
-        modifier = Modifier.fillMaxWidth(),
-        textAlign = TextAlign.Center,
-        color = MaterialTheme.colors.primary,
-        text = stringResource(R.string.hello_world, greetingName)
-    )
-}
-
-@Preview(device = WearDevices.SMALL_ROUND, showSystemUi = true)
-@Composable
-fun DefaultPreview() {
-    WearApp("Preview Android")
 }
