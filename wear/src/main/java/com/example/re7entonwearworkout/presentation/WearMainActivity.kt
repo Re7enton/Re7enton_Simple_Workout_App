@@ -26,7 +26,7 @@ import androidx.wear.tooling.preview.devices.WearDevices
 import com.example.re7entonwearworkout.R
 import com.example.re7entonwearworkout.presentation.theme.Re7entonSimpleWorkoutAppTheme
 
-class MainActivity : ComponentActivity() {
+class WearMainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         installSplashScreen()
 
