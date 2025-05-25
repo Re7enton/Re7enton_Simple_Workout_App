@@ -14,7 +14,7 @@ room = "2.7.1"
 timber = "5.0.1"
 hilt-navigation = "1.2.0"
 playServicesWearable = "19.0.0"
-wearCompose = "1.4.1"
+wearCompose = "1.5.0-beta02"
 coreSplashscreen = "1.0.1"
 workmanager = "2.10.1"
 datastore = "1.1.7"
@@ -47,7 +47,7 @@ hilt-navigation-compose = { module = "androidx.hilt:hilt-navigation-compose", ve
 material-icons-extended = { group = "androidx.compose.material", name = "material-icons-extended" }
 play-services-wearable = { group = "com.google.android.gms", name = "play-services-wearable", version.ref = "playServicesWearable" }
 wear-compose-foundation = { group = "androidx.wear.compose", name = "compose-foundation", version.ref = "wearCompose"}
-wear-compose-material = { group = "androidx.wear.compose", name = "compose-material", version.ref = "wearCompose"}
+wear-compose-material3 = { group = "androidx.wear.compose", name = "compose-material3", version.ref = "wearCompose"}
 wear-compose-navigation = { group = "androidx.wear.compose", name = "compose-navigation", version.ref = "wearCompose"}
 wear-compose-ui-tooling = { group = "androidx.wear.compose", name = "compose-ui-tooling", version.ref = "wearCompose"}
 androidx-core-splashscreen = { group = "androidx.core", name = "core-splashscreen", version.ref = "coreSplashscreen" }
