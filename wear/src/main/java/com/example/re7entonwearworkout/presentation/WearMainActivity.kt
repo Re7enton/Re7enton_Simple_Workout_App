@@ -8,23 +8,12 @@ package com.example.re7entonwearworkout.presentation
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
-import androidx.wear.compose.material.MaterialTheme
-import androidx.wear.compose.material.Text
-import androidx.wear.compose.material.TimeText
-//import androidx.wear.tooling.preview.devices.WearDevices
-import com.example.re7entonwearworkout.R
-import com.example.re7entonwearworkout.presentation.theme.Re7entonSimpleWorkoutAppTheme
+import androidx.compose.runtime.*
+import androidx.navigation.NavType
+import androidx.navigation.compose.*
+import com.example.re7entonwearworkout.hydration.HydrationScreen
+import com.example.re7entonwearworkout.presentation.theme.Re7entonWearWorkoutTheme
+import com.example.re7entonwearworkout.timer.TimerScreen
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
@@ -32,17 +21,17 @@ class WearMainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-//            Re7entonWearOsWorkoutTheme {
-//                val navController = rememberNavController()
-//                NavHost(navController, startDestination = "timer") {
-//                    composable("timer") {
-//                        TimerScreen()
-//                    }
-//                    composable("hydration") {
-//                        HydrationScreen()
-//                    }
-//                }
-//            }
+            Re7entonWearWorkoutTheme {
+                val navController = rememberNavController()
+                NavHost(navController, startDestination = "timer") {
+                    composable("timer") {
+                        TimerScreen()
+                    }
+                    composable("hydration") {
+                        HydrationScreen()
+                    }
+                }
+            }
         }
     }
 }

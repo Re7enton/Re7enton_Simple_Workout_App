@@ -3,7 +3,7 @@ package com.example.re7entonwearworkout.timer
 import androidx.compose.foundation.layout.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue                  // <-- delegate import
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -15,6 +15,7 @@ import androidx.wear.compose.material3.Text
 import androidx.wear.compose.material3.TimeText
 import androidx.wear.compose.material3.AppScaffold
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.ui.tooling.preview.Preview
 
 
 @Composable
@@ -71,6 +72,7 @@ fun TimerScreen(vm: TimerViewModel = hiltViewModel()) {
     }
 }
 
+@Preview
 @Composable
 fun TimerScreenPreview() {
     // For preview, simply call without a real ViewModel

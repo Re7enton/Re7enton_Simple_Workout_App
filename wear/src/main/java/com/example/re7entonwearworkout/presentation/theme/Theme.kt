@@ -1,17 +1,48 @@
 package com.example.re7entonwearworkout.presentation.theme
 
+import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.material3.darkColorScheme    // core M3
+import androidx.compose.material3.lightColorScheme   // core M3
+import androidx.compose.material3.MaterialTheme      // core M3
+import androidx.compose.material3.Typography         // core M3
+import androidx.compose.material3.Shapes             // core M3
 import androidx.compose.runtime.Composable
-import androidx.wear.compose.material.MaterialTheme
+import androidx.compose.ui.graphics.Color
+
+private val LightColors = lightColorScheme(
+    primary      = Color(0xFF6750A4),
+    onPrimary    = Color.White,
+    secondary    = Color(0xFF625B71),
+    onSecondary  = Color.White,
+    background   = Color(0xFFF6F1E6),
+    onBackground = Color(0xFF1C1B1F),
+    surface      = Color(0xFFF6F1E6),
+    onSurface    = Color(0xFF1C1B1F)
+)
+
+private val DarkColors = darkColorScheme(
+    primary      = Color(0xFFD0BCFF),
+    onPrimary    = Color(0xFF381E72),
+    secondary    = Color(0xFFCCC2DC),
+    onSecondary  = Color(0xFF332D41),
+    background   = Color(0xFF1C1B1F),
+    onBackground = Color(0xFFE6E1E5),
+    surface      = Color(0xFF1C1B1F),
+    onSurface    = Color(0xFFE6E1E5)
+)
 
 @Composable
-fun Re7entonSimpleWorkoutAppTheme(
+fun Re7entonWearWorkoutTheme(
+    darkTheme: Boolean = isSystemInDarkTheme(),
     content: @Composable () -> Unit
 ) {
-    /**
-     * Empty theme to customize for your app.
-     * See: https://developer.android.com/jetpack/compose/designsystems/custom
-     */
+    val colors = if (darkTheme) DarkColors else LightColors
+
+    // Use the core Material3 theme
     MaterialTheme(
-        content = content
+        colorScheme = colors,
+        typography  = Typography(),
+        shapes      = Shapes(),
+        content     = content
     )
 }

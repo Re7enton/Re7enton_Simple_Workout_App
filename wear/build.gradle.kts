@@ -62,6 +62,9 @@ dependencies {
     ksp(libs.hilt.compiler)
     implementation(libs.hilt.navigation.compose)
     implementation(libs.timber)
+    implementation(libs.material.icons.extended)
+    implementation(libs.androidx.material3)
+
 
 
     androidTestImplementation(platform(libs.androidx.compose.bom))
