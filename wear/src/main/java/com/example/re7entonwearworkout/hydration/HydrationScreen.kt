@@ -29,14 +29,13 @@ fun HydrationScreen(
     onSkip: () -> Unit,
     onBack: () -> Unit
 ) {
-    AppScaffold {
+    AppScaffold{
         Box(
             modifier = Modifier
                 .fillMaxSize(),
             contentAlignment = Alignment.Center
         ) {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                TimeText()
                 Spacer(Modifier.height(16.dp))
                 Icon(
                     imageVector = Icons.Filled.LocalDrink,

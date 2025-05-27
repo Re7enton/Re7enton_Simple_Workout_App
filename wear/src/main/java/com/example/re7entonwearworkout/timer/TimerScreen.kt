@@ -28,7 +28,7 @@ fun TimerScreen(
     val duration  by vm.duration.collectAsState()
 
     // 2) Use the Wear Material3 AppScaffold
-    AppScaffold {
+    AppScaffold{
         Box(
             modifier = Modifier
                 .fillMaxSize(),
@@ -37,11 +37,6 @@ fun TimerScreen(
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                // Show current device time
-                TimeText()
-
-                Spacer(Modifier.height(16.dp))
-
                 // Countdown display
                 Text(
                     text = "$remaining s",
