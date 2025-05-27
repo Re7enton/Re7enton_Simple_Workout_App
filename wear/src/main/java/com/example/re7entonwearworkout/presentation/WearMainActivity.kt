@@ -8,12 +8,8 @@ package com.example.re7entonwearworkout.presentation
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.runtime.*
-import androidx.navigation.NavType
-import androidx.navigation.compose.*
-import com.example.re7entonwearworkout.hydration.HydrationScreen
+import com.example.re7entonwearworkout.navigation.WearNavigation
 import com.example.re7entonwearworkout.presentation.theme.Re7entonWearWorkoutTheme
-import com.example.re7entonwearworkout.timer.TimerScreen
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
@@ -22,15 +18,7 @@ class WearMainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContent {
             Re7entonWearWorkoutTheme {
-                val navController = rememberNavController()
-                NavHost(navController, startDestination = "timer") {
-                    composable("timer") {
-                        TimerScreen()
-                    }
-                    composable("hydration") {
-                        HydrationScreen()
-                    }
-                }
+                WearNavigation()
             }
         }
     }

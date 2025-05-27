@@ -26,7 +26,8 @@ import androidx.wear.compose.material3.TimeText
 fun HydrationScreen(
     count: Int,
     onDrink: () -> Unit,
-    onSkip: () -> Unit
+    onSkip: () -> Unit,
+    onBack: () -> Unit
 ) {
     AppScaffold {
         Box(
@@ -54,6 +55,8 @@ fun HydrationScreen(
                     Button(onClick = onDrink) { Text("Drink") }
                     Button(onClick = onSkip)  { Text("Skip")  }
                 }
+                Spacer(Modifier.height(8.dp))
+                Button(onClick = onBack) { Text("Back") }
             }
         }
     }
@@ -63,12 +66,16 @@ fun HydrationScreen(
  * Real‑world overload that pulls count from the ViewModel.
  */
 @Composable
-fun HydrationScreen(vm: HydrationViewModel = hiltViewModel()) {
+fun HydrationScreen(
+    vm: HydrationViewModel = hiltViewModel(),
+    onBack: () -> Unit
+) {
     val count by vm.waterCount.collectAsState()
     HydrationScreen(
         count = count,
         onDrink = { vm.drink() },
-        onSkip  = { vm.skip()  }
+        onSkip  = { vm.skip()  },
+        onBack  = onBack
     )
 }
 
@@ -79,6 +86,7 @@ fun HydrationScreenPreview() {
     HydrationScreen(
         count = 3,
         onDrink = {},
-        onSkip = {}
+        onSkip = {},
+        onBack = {}
     )
 }

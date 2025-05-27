@@ -19,7 +19,10 @@ import androidx.compose.ui.tooling.preview.Preview
 
 
 @Composable
-fun TimerScreen(vm: TimerViewModel = hiltViewModel()) {
+fun TimerScreen(
+    vm: TimerViewModel = hiltViewModel(),
+    onHydrationClick: () -> Unit
+) {
     // 1) Collect state from the ViewModel
     val remaining by vm.remaining.collectAsState()
     val duration  by vm.duration.collectAsState()
@@ -46,12 +49,16 @@ fun TimerScreen(vm: TimerViewModel = hiltViewModel()) {
                 )
 
                 Spacer(Modifier.height(16.dp))
-
-                // Start button
-                Button(onClick = { vm.start() }) {
-                    Text("Start")
-                }
-
+                Row() {
+//                     Start button
+                     Button(onClick = { vm.start() }) {
+                 Text("Start")
+                     }
+                     Spacer(Modifier.width(8.dp))
+                     Button(onClick = onHydrationClick) {
+                 Text("Hydration")
+                 }
+                     }
                 Spacer(Modifier.height(8.dp))
 
                 // Duration slider
@@ -67,14 +74,14 @@ fun TimerScreen(vm: TimerViewModel = hiltViewModel()) {
                         .fillMaxWidth()
                         .padding(horizontal = 16.dp)
                 )
+                }
             }
         }
     }
-}
 
 @Preview
 @Composable
 fun TimerScreenPreview() {
     // For preview, simply call without a real ViewModel
-    TimerScreen(vm = TimerViewModel())
+    TimerScreen(vm = TimerViewModel(), onHydrationClick = {})
 }
