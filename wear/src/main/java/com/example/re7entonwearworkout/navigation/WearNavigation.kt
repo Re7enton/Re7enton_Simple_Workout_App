@@ -5,7 +5,6 @@ import androidx.wear.compose.navigation.SwipeDismissableNavHost
 import androidx.wear.compose.navigation.composable
 import androidx.wear.compose.navigation.rememberSwipeDismissableNavController
 import com.example.re7entonwearworkout.hydration.HydrationScreen
-import com.example.re7entonwearworkout.navigation.Destination
 import com.example.re7entonwearworkout.timer.TimerScreen
 
 @Composable
