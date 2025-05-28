@@ -14,28 +14,22 @@ import javax.inject.Inject
 
 @HiltViewModel
 class TimerViewModel @Inject constructor() : ViewModel() {
-    // Preset durations in seconds
-    private val presets = listOf(60, 120)
-
-    // Which preset is selected index (0 = 1min, 1 = 2min)
+    private val presets = listOf(60, 120)           // available durations
     private val _selectedPresetIndex = MutableStateFlow(0)
     val selectedPresetIndex: StateFlow<Int> = _selectedPresetIndex.asStateFlow()
 
-    // The actual duration used when starting (read-only)
     private val _duration = MutableStateFlow(presets.first())
     val duration: StateFlow<Int> = _duration.asStateFlow()
 
-    // Remaining time in current countdown
     private val _remaining = MutableStateFlow(0)
     val remaining: StateFlow<Int> = _remaining.asStateFlow()
 
-    // Are we currently running?
     private val _isRunning = MutableStateFlow(false)
     val isRunning: StateFlow<Boolean> = _isRunning.asStateFlow()
 
     private var timerJob: Job? = null
 
-    /** User taps a preset (0 = 1m, 1 = 2m). */
+    /** User picks 1 min or 2 min preset. */
     fun selectPreset(index: Int) {
         if (index in presets.indices) {
             _selectedPresetIndex.value = index
@@ -43,15 +37,16 @@ class TimerViewModel @Inject constructor() : ViewModel() {
         }
     }
 
-    /** Start or stop the countdown. */
+    /** Toggle ▶️ start / ■ stop. */
     fun toggleStartStop(onFinish: () -> Unit) {
         if (_isRunning.value) {
-            // Stop
+            // ■ STOP → cancel and reset
             timerJob?.cancel()
             _isRunning.value = false
-            Timber.d("Timer stopped")
+            _remaining.value = 0
+            Timber.d("Timer stopped and reset")
         } else {
-            // Start: apply preset to duration & remaining
+            // ▶️ START → set duration and kick off countdown
             val sec = presets[_selectedPresetIndex.value]
             _duration.value = sec
             _remaining.value = sec
@@ -64,7 +59,7 @@ class TimerViewModel @Inject constructor() : ViewModel() {
                 }
                 if (_remaining.value == 0 && _isRunning.value) {
                     Timber.d("Timer finished")
-                    onFinish()
+                    onFinish()  // ⚡️ notify “we’re done”
                 }
                 _isRunning.value = false
             }

@@ -5,6 +5,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.LocalDrink
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.Stop
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -27,25 +28,22 @@ fun TimerScreen(
     vm: TimerViewModel = hiltViewModel(),
     onHydrationClick: () -> Unit
 ) {
-    // Collect ViewModel state
+    // 1) Observe state
     val remaining     by vm.remaining.collectAsState()
     val duration      by vm.duration.collectAsState()
     val isRunning     by vm.isRunning.collectAsState()
     val selectedPreset by vm.selectedPresetIndex.collectAsState()
 
-    // Compute fraction
-    val fraction = if (duration > 0) remaining / duration.toFloat() else 0f
-
     AppScaffold {
         Box(
-            Modifier
+            modifier = Modifier
                 .fillMaxSize()
                 .padding(8.dp),
             contentAlignment = Alignment.Center
         ) {
-            // Determinate ring using lambda
+            // 3) Depleting ring behind content
             CircularProgressIndicator(
-                progress = { fraction.coerceIn(0f, 1f) },
+                progress = { if (duration>0) (remaining/duration.toFloat()) else 0f },
                 modifier = Modifier.fillMaxSize(),
                 strokeWidth = 4.dp
             )
@@ -54,23 +52,23 @@ fun TimerScreen(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                // Countdown text
+                // 4) Countdown text
                 Text(
                     text = "${remaining}s",
                     style = MaterialTheme.typography.displayLarge
                 )
 
-                // Preset buttons
+                // 5) Preset toggles
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     PresetToggle("1 min", selectedPreset == 0) { vm.selectPreset(0) }
                     PresetToggle("2 min", selectedPreset == 1) { vm.selectPreset(1) }
                 }
 
-                // Controls: start/stop & hydration
+                // 6) Controls: start/stop and hydration nav
                 Row(horizontalArrangement = Arrangement.spacedBy(24.dp)) {
-                    IconButton(onClick = { vm.toggleStartStop {} }) {
+                    IconButton(onClick = { vm.toggleStartStop {/* nothing */} }) {
                         Icon(
-                            imageVector = if (isRunning) Icons.Filled.Pause else Icons.Filled.PlayArrow,
+                            imageVector = if (isRunning) Icons.Filled.Stop else Icons.Filled.PlayArrow,
                             contentDescription = if (isRunning) "Stop" else "Start"
                         )
                     }
