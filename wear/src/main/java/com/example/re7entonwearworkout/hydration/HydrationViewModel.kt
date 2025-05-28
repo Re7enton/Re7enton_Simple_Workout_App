@@ -4,9 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.re7entonwearworkout.data.HydrationRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import timber.log.Timber
 import javax.inject.Inject
@@ -14,12 +12,13 @@ import javax.inject.Inject
 @HiltViewModel
 class HydrationViewModel @Inject constructor(
     private val repo: HydrationRepository
-): ViewModel() {
+) : ViewModel() {
+    // Current count, observed
     val waterCount: StateFlow<Int> = repo.waterCountFlow
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0)
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), 0)
 
     init {
-        // schedule reminders & midnight reset
+        // Start your background reminders
         repo.scheduleHourlyReminder()
         repo.scheduleMidnightReset()
     }
@@ -30,9 +29,9 @@ class HydrationViewModel @Inject constructor(
         Timber.d("User drank water")
     }
 
-    /** Called when user taps “Skip” */
-    fun skip() {
-        repo.scheduleHourlyReminder()
-        Timber.d("User skipped. Next reminder in 1h")
+    /** Undo one glass if mistake */
+    fun undo() = viewModelScope.launch {
+        repo.decrement()
+        Timber.d("User undid one drink")
     }
 }

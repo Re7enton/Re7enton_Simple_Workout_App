@@ -45,6 +45,15 @@ class HydrationRepository @Inject constructor(
         }
     }
 
+    /** Decrement by 1 but not below 0. */
+    suspend fun decrement() {
+        ds.edit { prefs ->
+            val old = prefs[Keys.WATER_COUNT] ?: 0
+            prefs[Keys.WATER_COUNT] = maxOf(0, old - 1)
+            Timber.d("Hydration count decremented to ${prefs[Keys.WATER_COUNT]}")
+        }
+    }
+
     /** Reset the water count to zero. */
     suspend fun reset() {
         ds.edit { prefs ->

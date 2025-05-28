@@ -1,82 +1,110 @@
 package com.example.re7entonwearworkout.timer
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.LocalDrink
+import androidx.compose.material.icons.filled.Pause
+import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.wear.compose.material3.Button
-import androidx.wear.compose.material3.MaterialTheme
-import androidx.wear.compose.material3.Slider
-import androidx.wear.compose.material3.Text
-import androidx.wear.compose.material3.TimeText
 import androidx.wear.compose.material3.AppScaffold
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.ui.tooling.preview.Preview
-
+import androidx.wear.compose.material3.CircularProgressIndicator
+import androidx.wear.compose.material3.Icon
+import androidx.wear.compose.material3.IconButton
+import androidx.wear.compose.material3.MaterialTheme
+import androidx.wear.compose.material3.OutlinedButton
+import androidx.wear.compose.material3.Text
+import androidx.wear.compose.material3.FilledTonalButton
 
 @Composable
 fun TimerScreen(
     vm: TimerViewModel = hiltViewModel(),
     onHydrationClick: () -> Unit
 ) {
-    // 1) Collect state from the ViewModel
-    val remaining by vm.remaining.collectAsState()
-    val duration  by vm.duration.collectAsState()
+    // Collect ViewModel state
+    val remaining     by vm.remaining.collectAsState()
+    val duration      by vm.duration.collectAsState()
+    val isRunning     by vm.isRunning.collectAsState()
+    val selectedPreset by vm.selectedPresetIndex.collectAsState()
 
-    // 2) Use the Wear Material3 AppScaffold
-    AppScaffold{
+    // Compute fraction
+    val fraction = if (duration > 0) remaining / duration.toFloat() else 0f
+
+    AppScaffold {
         Box(
-            modifier = Modifier
-                .fillMaxSize(),
+            Modifier
+                .fillMaxSize()
+                .padding(8.dp),
             contentAlignment = Alignment.Center
         ) {
+            // Determinate ring using lambda
+            CircularProgressIndicator(
+                progress = { fraction.coerceIn(0f, 1f) },
+                modifier = Modifier.fillMaxSize(),
+                strokeWidth = 4.dp
+            )
+
             Column(
-                horizontalAlignment = Alignment.CenterHorizontally
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                // Countdown display
+                // Countdown text
                 Text(
-                    text = "$remaining s",
-                    style = MaterialTheme.typography.titleLarge
+                    text = "${remaining}s",
+                    style = MaterialTheme.typography.displayLarge
                 )
 
-                Spacer(Modifier.height(16.dp))
-                Row() {
-//                     Start button
-                     Button(onClick = { vm.start() }) {
-                 Text("Start")
-                     }
-                     Spacer(Modifier.width(8.dp))
-                     Button(onClick = onHydrationClick) {
-                 Text("Hydration")
-                 }
-                     }
-                Spacer(Modifier.height(8.dp))
+                // Preset buttons
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    PresetToggle("1 min", selectedPreset == 0) { vm.selectPreset(0) }
+                    PresetToggle("2 min", selectedPreset == 1) { vm.selectPreset(1) }
+                }
 
-                // Duration slider
-                Text("Set timer:")
-                Slider(
-                    value = duration.toFloat(),
-                    onValueChange = { newValue ->
-                        vm.setDuration(newValue.toInt())
-                    },
-                    valueRange = 10f..300f,
-                    steps = 28,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp)
-                )
+                // Controls: start/stop & hydration
+                Row(horizontalArrangement = Arrangement.spacedBy(24.dp)) {
+                    IconButton(onClick = { vm.toggleStartStop {} }) {
+                        Icon(
+                            imageVector = if (isRunning) Icons.Filled.Pause else Icons.Filled.PlayArrow,
+                            contentDescription = if (isRunning) "Stop" else "Start"
+                        )
+                    }
+                    IconButton(onClick = onHydrationClick) {
+                        Icon(
+                            imageVector = Icons.Filled.LocalDrink,
+                            contentDescription = "Hydration"
+                        )
+                    }
                 }
             }
         }
     }
+}
 
-@Preview
+@Composable
+private fun PresetToggle(
+    label: String,
+    selected: Boolean,
+    onClick: () -> Unit
+) {
+    if (selected) {
+        FilledTonalButton(onClick = onClick) {
+            Text(label, style = MaterialTheme.typography.bodyLarge)
+        }
+    } else {
+        OutlinedButton(onClick = onClick) {
+            Text(label, style = MaterialTheme.typography.bodyLarge)
+        }
+    }
+}
+
+@Preview(showBackground = true)
 @Composable
 fun TimerScreenPreview() {
-    // For preview, simply call without a real ViewModel
     TimerScreen(vm = TimerViewModel(), onHydrationClick = {})
 }

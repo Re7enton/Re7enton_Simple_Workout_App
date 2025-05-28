@@ -4,20 +4,18 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.LocalDrink
+import androidx.compose.material.icons.filled.Restore
+import androidx.compose.material.icons.filled.Undo
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.wear.compose.material3.AppScaffold
-import androidx.wear.compose.material3.Button
-import androidx.wear.compose.material3.Icon
-import androidx.wear.compose.material3.MaterialTheme
-import androidx.wear.compose.material3.Text
-import androidx.wear.compose.material3.TimeText
+import androidx.wear.compose.material3.*
 
 /**
  * Core Hydration UI, parameterized so Preview doesn't need a ViewModel.
@@ -26,43 +24,55 @@ import androidx.wear.compose.material3.TimeText
 fun HydrationScreen(
     count: Int,
     onDrink: () -> Unit,
-    onSkip: () -> Unit,
+    onUndo: () -> Unit,
     onBack: () -> Unit
 ) {
-    AppScaffold{
+    AppScaffold {
         Box(
-            modifier = Modifier
-                .fillMaxSize(),
+            Modifier
+                .fillMaxSize()
+                .padding(16.dp),
             contentAlignment = Alignment.Center
         ) {
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Spacer(Modifier.height(16.dp))
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                // Big colored water icon; tap to drink
                 Icon(
-                    imageVector = Icons.Filled.LocalDrink,
+                    imageVector = Icons.Default.LocalDrink,
                     contentDescription = "Drink water",
                     modifier = Modifier
                         .size(80.dp)
-                        .clickable(onClick = onDrink)
+                        .clickable(onClick = onDrink),
+                    tint = Color(0xFF42A5F5)
                 )
-                Spacer(Modifier.height(8.dp))
+
+                // Display count of glasses
                 Text(
-                    text = "You have drunk $count glasses",
-                    style = MaterialTheme.typography.bodyMedium
+                    text = "You've had $count glasses",
+                    style = MaterialTheme.typography.bodyLarge
                 )
-                Spacer(Modifier.height(16.dp))
-                Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                    Button(onClick = onDrink) { Text("Drink") }
-                    Button(onClick = onSkip)  { Text("Skip")  }
+
+                // Undo last drink button
+                IconButton(onClick = onUndo) {
+                    Icon(
+                        imageVector = Icons.Default.Restore,
+                        contentDescription = "Undo last drink"
+                    )
                 }
-                Spacer(Modifier.height(8.dp))
-                Button(onClick = onBack) { Text("Back") }
+
+                // Back to timer button
+                Button(onClick = onBack) {
+                    Text("Back")
+                }
             }
         }
     }
 }
 
 /**
- * Real‑world overload that pulls count from the ViewModel.
+ * Runtime overload that pulls count from the ViewModel.
  */
 @Composable
 fun HydrationScreen(
@@ -71,21 +81,21 @@ fun HydrationScreen(
 ) {
     val count by vm.waterCount.collectAsState()
     HydrationScreen(
-        count = count,
-        onDrink = { vm.drink() },
-        onSkip  = { vm.skip()  },
-        onBack  = onBack
+        count    = count,
+        onDrink  = { vm.drink() },
+        onUndo   = { vm.undo() },
+        onBack   = onBack
     )
 }
 
+/** Preview using the parameterized variant—no ViewModel needed. */
 @Preview(showBackground = true)
 @Composable
 fun HydrationScreenPreview() {
-    // Preview with an arbitrary count
     HydrationScreen(
-        count = 3,
+        count  = 3,
         onDrink = {},
-        onSkip = {},
-        onBack = {}
+        onUndo  = {},
+        onBack  = {}
     )
 }
