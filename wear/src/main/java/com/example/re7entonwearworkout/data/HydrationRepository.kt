@@ -74,7 +74,7 @@ class HydrationRepository @Inject constructor(
 
         workManager.enqueueUniquePeriodicWork(
             "water_reminder",
-            ExistingPeriodicWorkPolicy.KEEP,
+            ExistingPeriodicWorkPolicy.REPLACE,
             request
         )
         Timber.d("Scheduled hourly water reminders")

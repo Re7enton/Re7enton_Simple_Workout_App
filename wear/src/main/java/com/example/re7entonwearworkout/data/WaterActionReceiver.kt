@@ -12,18 +12,23 @@ import timber.log.Timber
 class WaterActionReceiver : BroadcastReceiver() {
 
     override fun onReceive(context: Context, intent: Intent) {
+        val repository = HydrationRepository(context, WorkManager.getInstance(context))
+
         when (intent.action) {
             ACTION_DRINK -> {
                 // Enqueue a one‑time worker to increment the water count
                 WorkManager.getInstance(context)
                     .enqueue(OneTimeWorkRequestBuilder<IncrementWorker>().build())
                 Timber.d("Drink action received")
+
+                // schedule next reminder in 1h
+                repository.scheduleHourlyReminder()
             }
             ACTION_SKIP -> {
-                // Reschedule the next reminder in one hour
-                HydrationRepository(context, WorkManager.getInstance(context))
-                    .scheduleHourlyReminder()
                 Timber.d("Skip action received")
+
+                // schedule next reminder in 1h
+                repository.scheduleHourlyReminder()
             }
         }
         // Dismiss the notification
